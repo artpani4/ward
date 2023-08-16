@@ -5,7 +5,9 @@
     }
   },
   "tasks": {
-    "ex1": "deno run --allow-all examples/ex1.ts"
+    "ex1": "deno run --allow-all examples/ex1.ts",
+    "ex2": "deno run --allow-all examples/ex2.ts",
+    "ex3": "deno run --allow-all examples/ex3.ts"
   },
   "lint": {
     "files": {
