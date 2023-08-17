@@ -1,4 +1,3 @@
-import { EventManager } from '../src/eventManager.ts';
 import { Ward, WardEventData } from '../src/ward.ts';
 
 const ward = new Ward<string>()
@@ -10,6 +9,6 @@ const ward = new Ward<string>()
 
 Ward.eventManager.subscribe(
   ward.event,
-  (data: WardEventData) => console.log(data.old, data.new),
+  (data: WardEventData) => console.log(Ward.journal(data)),
 );
 ward.start();

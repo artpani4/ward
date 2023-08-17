@@ -8,7 +8,7 @@ export class EventManager {
     this.eventListeners[eventName].push(callback);
   }
 
-  public dispatch(eventName: string, data: any) {
+  public dispatch(eventName: string, data?: any) {
     const callbacks = this.eventListeners[eventName];
     if (callbacks) {
       for (const callback of callbacks) {

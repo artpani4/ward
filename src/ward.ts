@@ -10,6 +10,9 @@ type remoteCb<T> = () => Promise<T>;
 export interface WardEventData {
   old: object | string;
   new: object | string;
+  counter: number;
+  timeOfLastChange: number;
+  title: string;
 }
 
 export class Ward<T extends Object = {}> {
@@ -17,7 +20,12 @@ export class Ward<T extends Object = {}> {
   private period = '*/*/*';
   private timeoutId = 0;
   private localPath = '';
+  private lastChangeDetectedTimestamp = 0;
   private typeData: TargetType = 'variable';
+  private counter = 0;
+  private conditionToStop: (
+    data: WardEventData,
+  ) => boolean = () => false;
 
   private lastMemo: T | string | null = null;
   private dataCb: remoteCb<T> | null = null;
@@ -45,6 +53,16 @@ export class Ward<T extends Object = {}> {
     globalThis.addEventListener(eventName, (e) => {
       callback((e as CustomEvent).detail); // Передача данных из события в колбэк
     });
+  }
+
+  public static journal(data: WardEventData) {
+    return `${data.title}:
+    Current counter: ${data.counter}
+    Time of last change: ${data.timeOfLastChange} (${
+      new Date(data.timeOfLastChange).toLocaleString()
+    })
+    Old: ${data.old}
+    New: ${data.new}`;
   }
 
   public target = {
@@ -80,13 +98,6 @@ export class Ward<T extends Object = {}> {
     return this;
   }
 
-  // onChangeCb(
-  //   callback: (oldValue: T | string, newValue: T | string) => void,
-  // ) {
-  //   this.handler = callback;
-  //   return this;
-  // }
-
   public ifChangedThen = {
     runCallback: (
       callback: (oldValue: T | string, newValue: T | string) => void,
@@ -100,8 +111,31 @@ export class Ward<T extends Object = {}> {
         Ward.eventManager.dispatch(eventName, {
           old: oldValue,
           new: newValue,
+          counter: this.counter,
+          timeOfLastChange: this.lastChangeDetectedTimestamp,
+          title: this.title,
         });
       };
+      return this;
+    },
+  };
+
+  public stopIf = {
+    condition: (
+      predicate: (
+        data: WardEventData,
+      ) => boolean,
+    ) => {
+      this.conditionToStop = predicate;
+      return this;
+    },
+    eventTriggered: (eventName: string) => {
+      Ward.eventManager.subscribe(
+        eventName,
+        (data: WardEventData) => {
+          this.stop();
+        },
+      );
       return this;
     },
   };
@@ -202,14 +236,29 @@ export class Ward<T extends Object = {}> {
     const milliseconds = this.parseMilliseconds();
     this.timeoutId = setInterval(async () => {
       const newData = await this.grab();
+      if (
+        this.conditionToStop({
+          old: this.lastMemo!,
+          new: newData,
+          counter: this.counter,
+          timeOfLastChange: this.lastChangeDetectedTimestamp,
+          title: this.title,
+        })
+      ) {
+        this.stop();
+        return;
+      }
       if (!this.equal(newData, this.lastMemo!)) {
         this.handler(this.lastMemo!, newData);
         this.lastMemo = this.copy(newData) as typeof newData;
+        this.counter++;
+        this.lastChangeDetectedTimestamp = Date.now();
       }
     }, milliseconds);
   }
 
   stop() {
+    console.log(`Ward ${this.title} stopped`);
     clearInterval(this.timeoutId);
   }
 

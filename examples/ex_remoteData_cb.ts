@@ -1,15 +1,26 @@
-import { Ward } from '../src/ward.ts';
+// import {
+//   getNotionSimpleTextBlock,
+// } from '../src/integrations/notion/funcs.ts';
+// import { TextBlockSimple } from '../src/integrations/notion/schema.ts';
+// import { Ward, WardEventData } from '../src/ward.ts';
 
-interface A {
-  a: number;
-  b: number;
-}
+// const ward = new Ward<TextBlockSimple>()
+//   .name('test')
+//   .target.data.remote(() =>
+//     getNotionSimpleTextBlock(
+//       'https://www.notion.so/artpani/d1ecc246b8304e08a780b9a312548064?pvs=4#22931087a1f64dac9779a35127496c2a',
+//     )
+//   )
+//   .time('*/3/500')
+//   .ifChangedThen.emitEvent('ololo')
+//   .build();
 
-const ward = new Ward<A>()
-  .name('notion')
-  .target.data.remote(() => Promise.resolve<A>({ a: 10, b: 20 }))
-  .time('*/1/*')
-  .onChange((o, n) => console.log(o, n))
-  .build();
-
-console.log(ward);
+// //Где-то в другом участке кода
+// Ward.eventManager.subscribe(
+//   ward.event,
+//   (data: WardEventData) => {
+//     const newData = data.new as TextBlockSimple;
+//     console.log(newData.paragraph.rich_text[0].plain_text);
+//   },
+// );
+// ward.start();
